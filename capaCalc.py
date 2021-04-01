@@ -105,12 +105,27 @@ if __name__ == "__main__":
     # positions of the charges
     Qx = linspace(xmin, xmax, N)
     Qf = zeros(shape(Qx))
+    Qd = zeros(shape(Qx))
 
-    # calculate forces: N(N-1) operations
+    # calculate forces:
+    # N(N-1) operations
+    # [arbitrary units]
     for i, xi in enumerate(Qx):
         for j, xj in enumerate(Qx):
             if i == j: continue
             Qf[i] += sign(xi-xj)/(xi-xj)**2
 
-    for x, f in zip(Qx, Qf):
-        print(f'{x:+.3e} {f:+.3e}') 
+    # calculate displacement
+    # the dynamics of the system is not physical
+    # only the equilibrium positions are physical
+    # the displacement are fixed to a fraction of
+    # the total volume of the system
+    
+    d = (max(Qx) - min(Qx)) / 100
+    for i, f in enumerate(Qf): 
+        Qd[i] = sign(f)*d
+
+    # display step result
+    for x, f, d in zip(Qx, Qf, Qd):
+        print(f'p:{x:+.3e} f:{f:+.3e} dp:{f:+.3e}') 
+
