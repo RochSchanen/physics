@@ -96,36 +96,93 @@ if __name__ == "__main__":
     from numpy import zeros
     from numpy import sign
 
+
+    # open file
+    fh = open('data.txt', 'w')
+
     # finite wire
     xmin, xmax = - 1.0, + 1.0
 
-    # charges
-    N = 9
+    # set number of charges
+    N = 49
     
-    # positions of the charges
+    # set the positions of the charges:
+    
+    # compute a uniform distribution
     Qx = linspace(xmin, xmax, N)
-    Qf = zeros(shape(Qx))
-    Qd = zeros(shape(Qx))
 
-    # calculate forces:
-    # N(N-1) operations
-    # [arbitrary units]
-    for i, xi in enumerate(Qx):
-        for j, xj in enumerate(Qx):
-            if i == j: continue
-            Qf[i] += sign(xi-xj)/(xi-xj)**2
+    # perform a fixed number of steps:
 
-    # calculate displacement
-    # the dynamics of the system is not physical
-    # only the equilibrium positions are physical
-    # the displacement are fixed to a fraction of
-    # the total volume of the system
-    
-    d = (max(Qx) - min(Qx)) / 100
-    for i, f in enumerate(Qf): 
-        Qd[i] = sign(f)*d
+    # some more refined test about
+    # defining the equilibrium state
+    # must be investigated
+    for n in range(50000):
 
-    # display step result
+        # intialise simulation step:
+        Qf = zeros(shape(Qx))
+        Qd = zeros(shape(Qx))
+
+        # calculate forces:
+
+        # the computation takes N(N-1) operations
+        for i, xi in enumerate(Qx):
+            for j, xj in enumerate(Qx):
+                if i == j: continue
+                Qf[i] += sign(xi-xj)/(xi-xj)**2
+
+        # calculate displacement:
+        
+        # the dynamics of the system is not physical
+        # only the equilibrium positions are physical
+        # the displacement are fixed to a fraction of
+        # the total volume of the system. imagine some
+        # kind of overdamped motion. Also, the higher
+        # the number of charges the smaller the fraction
+        # to accomodate for higher charge densities,
+        # but the computation will take more time.
+
+        F = 1/1000
+        S = F*(max(Qx) - min(Qx))
+        for i, f in enumerate(Qf): 
+            # Qd[i] = sign(f)*S*F
+            Qd[i] = f*S*F
+
+        # Apply displacement respecting the geometrical
+        # constraints.
+
+        for i, d in enumerate(Qd):
+            x = Qx[i] + Qd[i]
+            if x < xmin: x = xmin
+            if x > xmax: x = xmax
+            Qx[i] = x
+
+        # display step result
+        # for x, f, d in zip(Qx, Qf, Qd):
+        #     print(f'p:{x:+.3e} f:{f:+.3e} dp:{d:+.3e}') 
+        # print()
+
+        # export data to file
+
+        fh.write(f'{n} ')
+        for x in Qx:
+            fh.write(f'{x:+.6e} ')
+        fh.write(f'\n')
+
+
+    # display result
     for x, f, d in zip(Qx, Qf, Qd):
-        print(f'p:{x:+.3e} f:{f:+.3e} dp:{f:+.3e}') 
+        print(f'p:{x:+.3e} f:{f:+.3e} dp:{d:+.3e}') 
+    print()
 
+    # done
+    fh.close()
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+fig, ax = plt.subplots()
+# ax.plot( linspace(xmin, xmax, N), linspace(xmin, xmax, N), '-')
+# ax.plot(linspace(xmin, xmax, N), Qx, '+') 
+ax.plot(linspace(xmin, xmax, N), Qx - linspace(xmin, xmax, N), '+') 
+
+plt.show()
