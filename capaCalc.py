@@ -9,44 +9,47 @@
 
 '''
 1) basics
-    the electrostatics basic law is coulomb law.
-    it is valid when there are no moving charges.
-    when a charge is free to move, this means that the the forces applied on it cancel out.
-    in vaccum charges are completely free, there are no relaxation mecanism. This is beyond the scope of this project.
+    the electrostatics basic law is coulomb law. it is valid when there are no
+    moving charges. when a charge is free to move, this means that the the
+    forces applied on it cancel out. in vaccum charges are completely free,
+    there are no relaxation mecanism. This is beyond the scope of this project.
     in a metal, charges are free but constrained by the volume of the metal.
-    further, at equilibrium (static charges), there can't be any electric field or excess charges inside the volume.
-    all excess charges are located at the surface of the metal.
-    this restrain quite dramatically the geometry for the charge distribution at equilibrium.
-    This is what this project relies on to calculate our mutual capacitances.
+    further, at equilibrium (static charges), there can't be any electric
+    field or excess charges inside the volume. all excess charges are located
+    at the surface of the metal. this restrain quite dramatically the geometry
+    for the charge distribution at equilibrium. This is what this project
+    relies on to calculate our mutual capacitances.
 
 2) find numerical method
-    the method used here is to start from some initial distribution of excess charges on all capacitor plates.
-    A uniform distribution seems to be a reasonable choice for most cases.
-    We call a plate any piece of metal of any shape as long as its topology is connexe. 
-    This distribution will be most likely not near equilibrium.
-    then we let the system relax towards the equilibrium state.
-    The path to equilibrium is given by the forces applied on the charges.
-    No inertial component in this dynamics is defined, so there is no relaxation mecanism needed.
-    the total excess charge is set at the start of the simulation and is set to be conserved through out the simulation.
-    the calculation of mutual capacitances can always br done by pairs.
-    The initial charges for a given pair of plates are equal and opposite by convention.
-    A different choices of charges can only lead to a different resulting set of potenitials.
-    There are no method to fix the potential of a metal part:
-    The potentials are calculated at the end from the equilibrium charge distribution.
-    The mutual capacitance is then simply the total charge divided by the potential difference measured.
+    the method used here is to start from some initial distribution of excess
+    charges on all capacitor plates. A uniform distribution seems to be a
+    reasonable choice for most cases. We call a plate any piece of metal of
+    any shape as long as its topology is connexe. This distribution will be
+    most likely not near equilibrium. then we let the system relax towards the
+    equilibrium state. The path to equilibrium is given by the forces applied
+    on the charges. No inertial component in this dynamics is defined, so
+    there is no relaxation mecanism needed. the total excess charge is set at
+    the start of the simulation and is set to be conserved through out the
+    simulation. the calculation of mutual capacitances can always br done by
+    pairs. The initial charges for a given pair of plates are equal and
+    opposite by convention. A different choices of charges can only lead to a
+    different resulting set of potenitials. There are no method to fix the
+    potential of a metal part: The potentials are calculated at the end from
+    the equilibrium charge distribution. The mutual capacitance is then simply
+    the total charge divided by the potential difference measured.
 
 3) implement
 
     - set the geometry for the distribution of the charges in the plate.
-    - set the initial distribution with a fixed charge. use a uniform distribution.
-    
-    to calculate relaxation towards an equilibrium:
-    - 1) calculate electric forces on every charge in the system.
-    - 2) calculate displacement of charges in the distribution.
-    - 3) displace charges respecting the total charge conservation constraint.
-    - 4) evaluate equilibrium condition
-    - reapeat 1, 2, 3 until 4 is fullfilled
-    
+    - set the initial distribution with a fixed charge. use a uniform
+    distribution.
+    - to calculate relaxation towards an equilibrium:
+        1) calculate electric forces on every charge in the system.
+        2) calculate displacement of charges in the distribution.
+        3) displace charges respecting the total charge conservation
+        constraint.
+        4) evaluate equilibrium condition
+        reapeat 1, 2, 3 until 4 is fullfilled
     - set a path for evaluating the potential difference bewteen the plates
     - numerically integrate along the path.
     - divide charge by the potential to get the mutual capacitance
@@ -58,7 +61,8 @@
     - start with a wire and a few charges (units will be dealt with later)
     - continue with simple parallel plates view from their cross section (1D)
     - tilt one plates to measure the effect on the capacitance
-    - continue with parallel plates shifted from each other by half their length
+    - continue with parallel plates shifted from each other by half their
+    length
     - continue with 2D parallel plates
     - continue with circular shape, tilted, etc...
 
@@ -112,7 +116,7 @@ if __name__ == "__main__":
     Cn, Cv = 0, ['b','r','g', 'b','r','g', 'b','r','g']
 
     # set number of charges
-    for N in [149, 237]:
+    for N in [100]:
     
         # set the positions of the charges:
         
@@ -213,10 +217,10 @@ if __name__ == "__main__":
                 fh.write(f'{n} ')
                 for x in Qx:
                     fh.write(f'{x:+.6e} ')
-                fh.write(f'\n')
+                fh.write('\n')
 
             # partial plot
-            if n in [2000, 2999]:
+            if n in [2999]:
                 # plot density distribution at step n
                 Qm = zeros(len(Qx)-1) # average position
                 Qc = zeros(len(Qx)-1) # average density
@@ -229,7 +233,7 @@ if __name__ == "__main__":
         fh.write(f'{n} ')
         for x in Qx:
             fh.write(f'{x:+.6e} ')
-        fh.write(f'\n')
+        fh.write('\n')
 
         # plot result
         Qm = zeros(len(Qx)-1) # average position
@@ -252,3 +256,13 @@ if __name__ == "__main__":
 
 fh.close()
 show()
+
+# results seems to fit the litterature
+# see ref: (check in home computer...)
+# however, the method does not allow to
+# split the charges into positive and
+# negative distributions which would
+# leads to the conductor polarisation
+# when in an external field: when do
+# opposites charges appear?
+
