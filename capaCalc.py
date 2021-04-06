@@ -96,93 +96,159 @@ if __name__ == "__main__":
     from numpy import zeros
     from numpy import sign
 
+    from matplotlib.pyplot import subplots
+    from matplotlib.pyplot import show
+    from matplotlib.pyplot import xlim
+    from matplotlib.pyplot import ylim
+    
 
     # open file
     fh = open('data.txt', 'w')
+    fig, ax = subplots()
 
     # finite wire
     xmin, xmax = - 1.0, + 1.0
 
+    Cn, Cv = 0, ['b','r','g', 'b','r','g', 'b','r','g']
+
     # set number of charges
-    N = 49
+    for N in [149, 237]:
     
-    # set the positions of the charges:
-    
-    # compute a uniform distribution
-    Qx = linspace(xmin, xmax, N)
-
-    # perform a fixed number of steps:
-
-    # some more refined test about
-    # defining the equilibrium state
-    # must be investigated
-    for n in range(50000):
-
-        # intialise simulation step:
-        Qf = zeros(shape(Qx))
-        Qd = zeros(shape(Qx))
-
-        # calculate forces:
-
-        # the computation takes N(N-1) operations
-        for i, xi in enumerate(Qx):
-            for j, xj in enumerate(Qx):
-                if i == j: continue
-                Qf[i] += sign(xi-xj)/(xi-xj)**2
-
-        # calculate displacement:
+        # set the positions of the charges:
         
-        # the dynamics of the system is not physical
-        # only the equilibrium positions are physical
-        # the displacement are fixed to a fraction of
-        # the total volume of the system. imagine some
-        # kind of overdamped motion. Also, the higher
-        # the number of charges the smaller the fraction
-        # to accomodate for higher charge densities,
-        # but the computation will take more time.
+        # compute a uniform distribution
+        Qx = linspace(xmin, xmax, N)
 
-        F = 1/1000
-        S = F*(max(Qx) - min(Qx))
-        for i, f in enumerate(Qf): 
-            # Qd[i] = sign(f)*S*F
-            Qd[i] = f*S*F
+        # plot density distribution at step 0
+        Qm = zeros(len(Qx)-1) # average position
+        Qc = zeros(len(Qx)-1) # average density
+        for i in range(len(Qx)-1):
+            Qm[i] = (Qx[i+1]+Qx[i])/2.0
+            Qc[i] = 1.0 / (Qx[i+1] - Qx[i])
+        ax.plot(Qm, Qc/(N-1), '--', color = Cv[Cn], linewidth = 0.5) 
 
-        # Apply displacement respecting the geometrical
-        # constraints.
+        # perform a fixed number of steps:
 
-        for i, d in enumerate(Qd):
-            x = Qx[i] + Qd[i]
-            if x < xmin: x = xmin
-            if x > xmax: x = xmax
-            Qx[i] = x
+        # some more refined test about
+        # defining the equilibrium state
+        # must be investigated
 
-        # display step result
-        # for x, f, d in zip(Qx, Qf, Qd):
-        #     print(f'p:{x:+.3e} f:{f:+.3e} dp:{d:+.3e}') 
-        # print()
+        # reduce data to file using a modulo term
+        MD = 100
 
-        # export data to file
+        for n in range(3000):
 
+            # for 49 charges, it turns out that 3000 steps
+            # is very close to the convergent distribution
+            # this was tested visually using up to 5000 steps
+            # however, the minimum number of steps required
+            # to reach quasi-equilibrium must dependent on
+            # the number of charges and requires investigation
+
+            # intialise simulation step:
+            Qf = zeros(shape(Qx))
+            Qd = zeros(shape(Qx))
+
+            # calculate forces:
+
+            # the computation takes N(N-1) operations
+            for i, xi in enumerate(Qx):
+                for j, xj in enumerate(Qx):
+                    if i == j: continue
+                    Qf[i] += sign(xi-xj)/(xi-xj)**2
+
+            # calculate displacement:
+            
+            # the dynamics of the system is not physical
+            # only the equilibrium positions are physical
+            # the displacement are fixed to a fraction of
+            # the total volume of the system. imagine some
+            # kind of overdamped motion. Also, the higher
+            # the number of charges the smaller the fraction
+            # to accomodate for higher charge densities,
+            # but the computation will take more time.
+
+            F = 1/(30*N)
+            
+            # this value needs to be adjusted as the number
+            # of charges increases: the displacement must
+            # remain small enough in order to keep a reasonable
+            # distance between the charge a prevent overlaping
+            # issues: this needs a more general approach,
+            # especially at higher dimensions
+
+            S = F*(max(Qx) - min(Qx)) # size of the system
+
+            for i, f in enumerate(Qf): 
+
+                # the choice for the mode of displacement
+                # needs also to be studied: it needs to be
+                # small enougth when reaching equilibrium
+                # in order to avoid oscillation around the
+                # equilibrium point, but not too large to
+                # keep displacmennt from being too large.
+                # some linear funtion around zero which
+                # staturates at some given value (on the
+                # order of S/N) should make a good filter
+
+                # Qd[i] = sign(f)*S*F # fixed steps
+                Qd[i] = f*S*F # linear steps
+                # Qd[i] = filter(f,S,F) # general filter
+
+            # Apply displacement respecting the geometrical
+            # constraints.
+
+            for i, d in enumerate(Qd):
+                x = Qx[i] + Qd[i]
+                if x < xmin: x = xmin
+                if x > xmax: x = xmax
+                Qx[i] = x
+
+            # this must be generalised to higher dimensions
+            # also, the superposition of charges should be
+            # avoided and included in the code.
+
+            # partial export data to file
+            if not n % MD: 
+                fh.write(f'{n} ')
+                for x in Qx:
+                    fh.write(f'{x:+.6e} ')
+                fh.write(f'\n')
+
+            # partial plot
+            if n in [2000, 2999]:
+                # plot density distribution at step n
+                Qm = zeros(len(Qx)-1) # average position
+                Qc = zeros(len(Qx)-1) # average density
+                for i in range(len(Qx)-1):
+                    Qm[i] = (Qx[i+1]+Qx[i])/2.0
+                    Qc[i] = 1.0 / (Qx[i+1] - Qx[i])
+                ax.plot(Qm, Qc/(N-1), '--', color = Cv[Cn], linewidth = 0.5) 
+
+        # save last line
         fh.write(f'{n} ')
         for x in Qx:
             fh.write(f'{x:+.6e} ')
         fh.write(f'\n')
 
+        # plot result
+        Qm = zeros(len(Qx)-1) # average position
+        Qc = zeros(len(Qx)-1) # average density
+        for i in range(len(Qx)-1):
+            Qm[i] = (Qx[i+1]+Qx[i])/2.0
+            Qc[i] = 1.0 / (Qx[i+1] - Qx[i])
+        ax.plot(Qm, Qc/(N-1), '.', color = Cv[Cn], linewidth = 1.0) 
 
-    # display result
-    for x, f, d in zip(Qx, Qf, Qd):
-        print(f'p:{x:+.3e} f:{f:+.3e} dp:{d:+.3e}') 
-    print()
+        # next set of charges
+        Cn += 1
 
-    # done
-    fh.close()
+        # done
 
-import matplotlib.pyplot as plt
-import numpy as np
+    xlim(-1.0, +1.0)
+    ylim(+0.0, +1.0)
+    # ax.plot( linspace(xmin, xmax, N), linspace(xmin, xmax, N), '-')
+    # ax.plot(linspace(xmin, xmax, N), Qx, '+') 
+    # ax.plot(linspace(xmin, xmax, N), Qx - linspace(xmin, xmax, N), '+') 
 
-fig, ax = plt.subplots()
-# ax.plot( linspace(xmin, xmax, N), linspace(xmin, xmax, N), '-')
-# ax.plot(linspace(xmin, xmax, N), Qx, '+') 
-ax.plot(linspace(xmin, xmax, N), Qx - linspace(xmin, xmax, N), '+') 
-
-plt.show()
+fh.close()
+show()
