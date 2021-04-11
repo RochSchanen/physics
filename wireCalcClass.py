@@ -155,3 +155,13 @@ if __name__ == "__main__":
     S.addPlot('-r')
     S.closeFile()
     S.showFigure()
+
+'''
+the necessity to reduce the displacement factor "0.00003" to such
+a low value is determined buy the high density regions where an excess
+of displacement can overlap the positions of the nearest neigbourgs.
+some more subtles conditions to prevent this overlap and also preserve
+the copmputation time to reasonable values are necessary for this model.
+Another approach is to divide instead the wire in pieces which charge
+may vary during the computation: this is the next version of the 1D engine.
+'''
