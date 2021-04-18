@@ -23,17 +23,16 @@ from sys import exit as exitProcess
 
 class system1D():
 
-    def __init__(self):
+    def __init__(self, a = -1.0, b = +1.0, n = 99):
 
-        # define geometry
-        self.boundaries = -1.0, +1.0
+        # compute positions
+        self.x = linspace(a, b, 2*n+1)[1::2]
 
-        # charges
-        self.n = 99
+        # compute initial charge distribution
+        self.q = [n/(b-a)]*n
 
-        # set default distribution
-        a, b = self.boundaries
-        self.coordinates = linspace(a, b, self.n)
+        # save geometry
+        self.geometry = a, b, n
 
         # running parameters
         self.step = 0
@@ -57,11 +56,11 @@ class system1D():
 
     def export(self):
         if self.fileHandle:
-            self.fileHandle.write(f'{self.stepIndex} ')
-            for x in self.coordinates:
-                fh.write(f'{x:+.6e} ')
+            self.fileHandle.write(f'{self.step} ')
+            for q in self.q:
+                self.fileHandle.write(f'{q:+.6e} ')
             # End-Of-Line
-            fh.write('\n')
+            self.fileHandle.write('\n')
             return
 
     axisHandle = None
@@ -78,28 +77,17 @@ class system1D():
         return
 
     def addPlot(self, *style):
-        # get parameters
-        ca, n = self.coordinates, self.n-1
-        # init arrays
-        pa = zeros(n) # average positions array
-        da = zeros(n) # average densities array
-        # compute data
-        for i in range(n):
-            pa[i] = (ca[i+1] + ca[i]) / 2.0
-            da[i] = 1.0 / (ca[i+1] - ca[i]) / n
         # add plot
-        self.axisHandle.plot(pa, da , *style) 
+        self.axisHandle.plot(self.x, self.q , *style) 
         return
 
     def runStep(self):
         
         # get parameters
-        ca = self.coordinates
-        a, b = self.boundaries
+        ca = self.x
 
         # init arrays
         fa = zeros(shape(ca)) # forces array
-        da = zeros(shape(ca)) # displacament array
 
         # forces
         for i, xi in enumerate(ca):

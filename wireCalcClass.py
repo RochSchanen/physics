@@ -57,7 +57,8 @@ class system1D():
 
     def export(self):
         if self.fileHandle:
-            self.fileHandle.write(f'{self.stepIndex} ')
+            fh = self.fileHandle
+            fh.write(f'{self.step} ')
             for x in self.coordinates:
                 fh.write(f'{x:+.6e} ')
             # End-Of-Line
@@ -85,8 +86,8 @@ class system1D():
         da = zeros(n) # average densities array
         # compute data
         for i in range(n):
-            pa[i] = (ca[i+1] + ca[i]) / 2.0
-            da[i] = 1.0 / (ca[i+1] - ca[i]) / n
+            pa[i] = (ca[i+1]+ca[i])/2.0
+            da[i] = 1.0/(ca[i+1]-ca[i])/n
         # add plot
         self.axisHandle.plot(pa, da , *style) 
         return
@@ -110,7 +111,7 @@ class system1D():
         # displacements
         for i, f in enumerate(fa):
             # compute virtual displacement
-            da[i] = 0.00003 * f * (b-a) / self.n
+            da[i] = 0.00003*f*(b-a)/self.n
             # coerce displacements to constraints
             x = ca[i] + da[i]
             if x < a: da[i] = a - ca[i]
@@ -146,19 +147,24 @@ if __name__ == "__main__":
     print("run Python3:" + pythonVersion)
 
     S = system1D()
-    S.openFile()
+
+    S.openFile('data2.txt')
     S.openFigure()
     S.addPlot('--b')
+
     S.runUntil(1000)
     S.addPlot('--b')
+
     S.runUntil(2000)
     S.addPlot('-r')
-    S.closeFile()
+    S.export()
+
     S.showFigure()
+    S.closeFile()
 
 '''
 the necessity to reduce the displacement factor "0.00003" to such
-a low value is determined buy the high density regions where an excess
+a low value is determined by the high density regions where an excess
 of displacement can overlap the positions of the nearest neigbourgs.
 some more subtles conditions to prevent this overlap and also preserve
 the copmputation time to reasonable values are necessary for this model.
